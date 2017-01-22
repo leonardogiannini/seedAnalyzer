@@ -187,8 +187,13 @@ class seedAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       std::vector<double> nearTracks_pt;
       std::vector<double> nearTracks_eta;
       std::vector<double> nearTracks_phi;
+      std::vector<double> nearTracks_mass;
       std::vector<double> nearTracks_dz;
       std::vector<double> nearTracks_dxy;
+      std::vector<double> nearTracks_3D_ip;
+      std::vector<double> nearTracks_3D_sip;
+      std::vector<double> nearTracks_2D_ip;
+      std::vector<double> nearTracks_2D_sip;
       
       std::vector<double> nearTracks_PCAdist;
       std::vector<double> nearTracks_PCAdsig;
@@ -211,6 +216,10 @@ class seedAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 
       std::vector<double> nearTracks_dotprodTrack;
       std::vector<double> nearTracks_dotprodSeed;
+      std::vector<double> nearTracks_dotprodTrackSeed2D;
+      std::vector<double> nearTracks_dotprodTrackSeed3D;
+      std::vector<double> nearTracks_dotprodTrackSeedVectors2D;
+      std::vector<double> nearTracks_dotprodTrackSeedVectors3D;
       
       std::vector<double> nearTracks_PCAonSeed_pvd;
       std::vector<double> nearTracks_PCAonTrack_pvd;
@@ -326,8 +335,13 @@ seedAnalyzer::seedAnalyzer(const edm::ParameterSet& iConfig)
     tree->Branch("nearTracks_pt", &nearTracks_pt);
     tree->Branch("nearTracks_eta", &nearTracks_eta);
     tree->Branch("nearTracks_phi", &nearTracks_phi);
+    tree->Branch("nearTracks_mass", &nearTracks_mass);
     tree->Branch("nearTracks_dz", &nearTracks_dz);
     tree->Branch("nearTracks_dxy", &nearTracks_dxy);
+    tree->Branch("nearTracks_3D_ip", &nearTracks_3D_ip);
+    tree->Branch("nearTracks_3D_sip", &nearTracks_3D_sip);
+    tree->Branch("nearTracks_2D_ip", &nearTracks_2D_ip);
+    tree->Branch("nearTracks_2D_sip", &nearTracks_2D_sip);
 
     tree->Branch("nearTracks_PCAdist", &nearTracks_PCAdist);
     tree->Branch("nearTracks_PCAdsig", &nearTracks_PCAdsig);
@@ -350,6 +364,10 @@ seedAnalyzer::seedAnalyzer(const edm::ParameterSet& iConfig)
 
     tree->Branch("nearTracks_dotprodTrack", &nearTracks_dotprodTrack);
     tree->Branch("nearTracks_dotprodSeed", &nearTracks_dotprodSeed);
+    tree->Branch("nearTracks_dotprodTrackSeed2D", &nearTracks_dotprodTrackSeed2D);
+    tree->Branch("nearTracks_dotprodTrackSeed3D", &nearTracks_dotprodTrackSeed3D);
+    tree->Branch("nearTracks_dotprodTrackSeedVectors2D", &nearTracks_dotprodTrackSeedVectors2D);
+    tree->Branch("nearTracks_dotprodTrackSeedVectors3D", &nearTracks_dotprodTrackSeedVectors3D);
     
     tree->Branch("nearTracks_PCAonSeed_pvd", &nearTracks_PCAonSeed_pvd);
     tree->Branch("nearTracks_PCAonTrack_pvd", &nearTracks_PCAonTrack_pvd);
