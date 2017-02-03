@@ -1,9 +1,12 @@
 class trackVars {
       public:
     double pt, eta, phi, dz, dxy,  dist, dsig;
+    double mass, t3Dip, t3Dsip, t2Dip, t2Dsip;
     double PCA_sx, PCA_sy, PCA_sz, PCA_sxerr, PCA_syerr, PCA_szerr;
     double PCA_tx, PCA_ty, PCA_tz, PCA_txerr, PCA_tyerr, PCA_tzerr;
     double dotprodTrack, dotprodSeed;
+    double dotprodTrackSeed2D, dotprodTrackSeed3D;
+    double dotprodTrackSeedVectors2D, dotprodTrackSeedVectors3D;
     double seedPCA_pv, trackPCA_pv;
     
     int index;
@@ -12,6 +15,10 @@ class trackVars {
     double, double, double, double,  double, double,
     double, double, double, double,  double, double,
     double, double
+    );
+    
+    void set_vars (double, double, double, double,
+    double, double, double, double, double
     );
     
     void set_index ( int );
@@ -51,6 +58,22 @@ double dotprodTrack2, double dotprodSeed2) {
 //    std::cout << "filling   "<< PCA_sxerr << " " << PCA_syerr << " " << PCA_szerr << " " << PCA_txerr << " " << PCA_tyerr << " " << PCA_tzerr << " "  << std::endl;
 //        std::cout << "filling " << dotprodTrack << "  " << dotprodSeed << std::endl;
 }
+
+void trackVars::set_vars ( double m, double t2dip, double t2dsip, double t3dip, double t3dsip, double t2dTS, double t3dTS, double t2dTSV, double t3dTSV){
+mass=m;
+t3Dip=t3dip;
+t3Dsip=t3dsip;
+t2Dip=t2dip;
+t2Dsip=t2dsip;
+dotprodTrackSeed2D=t2dTS;
+dotprodTrackSeed3D=t3dTS;
+dotprodTrackSeedVectors2D=t2dTSV;
+dotprodTrackSeedVectors3D=t3dTSV;
+
+
+}
+
+
 
 void trackVars::set_index ( int a){
 index=a;

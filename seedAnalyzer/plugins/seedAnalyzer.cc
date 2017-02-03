@@ -447,6 +447,11 @@ seedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     nearTracks_phi.clear();
     nearTracks_dz.clear();
     nearTracks_dxy.clear();
+    nearTracks_mass.clear();
+    nearTracks_3D_ip.clear();
+    nearTracks_3D_sip.clear();
+    nearTracks_2D_ip.clear();
+    nearTracks_2D_sip.clear();
     nearTracks_PCAdist.clear();
     nearTracks_PCAdsig.clear();
     nearTracks_PCAonSeed_x.clear();
@@ -463,6 +468,11 @@ seedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     nearTracks_PCAonTrack_zerr.clear();
     nearTracks_dotprodTrack.clear();
     nearTracks_dotprodSeed.clear();
+    nearTracks_dotprodTrackSeed2D.clear();
+    nearTracks_dotprodTrackSeed3D.clear();
+    nearTracks_dotprodTrackSeedVectors2D.clear();
+    nearTracks_dotprodTrackSeedVectors3D.clear();
+    
     
     nearTracks_PCAonSeed_pvd.clear();
     nearTracks_PCAonTrack_pvd.clear();
@@ -747,10 +757,22 @@ seedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     
                     GlobalVector trackDir2D(tt->impactPointState().globalDirection().x(),tt->impactPointState().globalDirection().y(),0.); 
                     GlobalVector seedDir2D(it->impactPointState().globalDirection().x(),it->impactPointState().globalDirection().y(),0.); 
+                    GlobalVector trackPCADir2D(dist.points().first.x()-pvp.x(),dist.points().first.y()-pvp.y(),0.); 
+                    GlobalVector seedPCADir2D(dist.points().second.x()-pvp.x(),dist.points().second.y()-pvp.y(),0.); 
 //                    //SK:UNUSED//    float dotprodTrackSeed2D = trackDir2D.unit().dot(seedDir2D.unit());
 
                     float dotprodTrack = (dist.points().first-pvp).unit().dot(tt->impactPointState().globalDirection().unit());
                     float dotprodSeed = (dist.points().second-pvp).unit().dot(it->impactPointState().globalDirection().unit());
+                    
+                    float dotprodTrackSeed2D = trackDir2D.unit().dot(seedDir2D.unit());
+                    float dotprodTrackSeed3D = it->impactPointState().globalDirection().unit().dot(tt->impactPointState().globalDirection().unit());
+                    float dotprodTrackSeed2DV = trackPCADir2D.unit().dot(seedPCADir2D.unit());
+                    float dotprodTrackSeed3DV = (dist.points().second-pvp).unit().dot((dist.points().first-pvp).unit());
+                    
+                    std::pair<bool,Measurement1D> t_ip = IPTools::absoluteImpactParameter3D(*tt,pv);        
+                    std::pair<bool,Measurement1D> t_ip2d = IPTools::absoluteTransverseImpactParameter(*tt,pv);
+                    
+                    
                     myTrack.set_values(tt->track().pt(), tt->track().eta(), tt->track().phi(),  tt->track().dz(), tt->track().dxy(), distance, 
                     m.significance(), /*put significance etc*/ 
                     
@@ -761,6 +783,8 @@ seedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     );
                     myTrack.set_index(genP_index[tt - selectedTracks.begin()]);
                     myTrack.set_distances(PCAseedFromPV, PCAtrackFromPV);
+                    myTrack.set_vars(masses[tt-selectedTracks.begin()],t_ip2d.second.value() , t_ip2d.second.significance(),
+                    t_ip.second.value() , t_ip.second.significance(), dotprodTrackSeed2D, dotprodTrackSeed3D, dotprodTrackSeed2DV, dotprodTrackSeed3DV );
                     nearTracks.push_back(myTrack);
                      
 //                    float w = distanceFromPV*distanceFromPV/(pvDistance*distance);
@@ -823,6 +847,11 @@ seedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             nearTracks_phi.push_back(nearTracks[i].phi);
             nearTracks_dz.push_back(nearTracks[i].dz);
             nearTracks_dxy.push_back(nearTracks[i].dxy);
+            nearTracks_mass.push_back(nearTracks[i].mass);
+            nearTracks_3D_ip.push_back(nearTracks[i].t3Dip);
+            nearTracks_3D_sip.push_back(nearTracks[i].t3Dsip);
+            nearTracks_2D_ip.push_back(nearTracks[i].t2Dip);
+            nearTracks_2D_sip.push_back(nearTracks[i].t2Dsip);
             nearTracks_PCAdist.push_back(nearTracks[i].dist);
             nearTracks_PCAdsig.push_back(nearTracks[i].dsig);
             nearTracks_PCAonSeed_x.push_back(nearTracks[i].PCA_sx);
@@ -839,6 +868,10 @@ seedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             nearTracks_PCAonTrack_zerr.push_back(nearTracks[i].PCA_tzerr);
             nearTracks_dotprodTrack.push_back(nearTracks[i].dotprodTrack);
             nearTracks_dotprodSeed.push_back(nearTracks[i].dotprodSeed);
+            nearTracks_dotprodTrackSeed2D.push_back(nearTracks[i].dotprodTrackSeed2D);
+            nearTracks_dotprodTrackSeed3D.push_back(nearTracks[i].dotprodTrackSeed3D);
+            nearTracks_dotprodTrackSeedVectors2D.push_back(nearTracks[i].dotprodTrackSeedVectors2D);
+            nearTracks_dotprodTrackSeedVectors3D.push_back(nearTracks[i].dotprodTrackSeedVectors3D);
             nearTracks_PCAonSeed_pvd.push_back(nearTracks[i].seedPCA_pv);
             nearTracks_PCAonTrack_pvd.push_back(nearTracks[i].trackPCA_pv);
             

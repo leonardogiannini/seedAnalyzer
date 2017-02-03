@@ -4,7 +4,7 @@ process = cms.Process("Pippo")
 
 #process.load("FWCore.MessageService.MessageLogger_cfi")
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 
 
 process.load('Configuration/StandardSequences/GeometryDB_cff')

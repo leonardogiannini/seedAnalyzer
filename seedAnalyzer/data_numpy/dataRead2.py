@@ -5,21 +5,23 @@ import sys
 
 print sys.argv[1]
 
-f1=TFile.Open("../tree_test_somefiles.root")
+f1=TFile.Open("../tree_test_newvars.root")
 tree=f1.Get("analyzer1/tree")
 #vertexCandidate_array
 seeds=[]
 print tree.GetEntries()
-for ev in range(int(sys.argv[1]), int(sys.argv[1])+200):
+for ev in range(int(sys.argv[1]), int(sys.argv[1])+500):
     print ev
     tree.GetEntry(ev)
     if tree.n_seed:
         seen_tracks=0
         print tree.n_seed
-        for j in range(tree.n_seed):
+        for j in range(len(tree.seed_eta)):
             #print tree.n_iv[0]    
 #            vertexCandidate_array=[]
-            print j, "vertex_index", seen_tracks
+            print j, "vertex_index", tree.n_seed
+            print len(tree.seed_pt), len(tree.seed_eta)
+            #print tree.seed_pt
             #seen_tracks=0
             for n in range(j*20, (j+1)*20):
                 #print j, n, "nseed",  tree.n_seed, tree.nearTracks_Nvtx[n], len(tree.nearTracks_MC_fromSeedVtx), tree.nearTracks_nTracks[n], tree.seed_pt[j], tree.pv_x
@@ -94,7 +96,17 @@ for ev in range(int(sys.argv[1]), int(sys.argv[1])+200):
                 tree.nearTracks_MC_fromSeedVtx[n],    #61
                 
                 tree.nearTracks_MC_pvd[n],    #62
-                tree.seed_MC_pvd[j]    #63
+                tree.seed_MC_pvd[j],    #63
+                
+                tree.nearTracks_mass[n],    #64
+                tree.nearTracks_3D_ip[n],    #65
+                tree.nearTracks_3D_sip[n],    #66
+                tree.nearTracks_2D_ip[n],    #67
+                tree.nearTracks_2D_sip[n],    #68
+                tree.nearTracks_dotprodTrackSeed2D[n],    #69
+                tree.nearTracks_dotprodTrackSeed3D[n],     #70
+                tree.nearTracks_dotprodTrackSeedVectors2D[n],    #71
+                tree.nearTracks_dotprodTrackSeedVectors3D[n],    #72
                 
                 ])
                 
@@ -168,6 +180,17 @@ for ev in range(int(sys.argv[1]), int(sys.argv[1])+200):
                 
                 "target",
                 "target"
+                
+                "tree.nearTracks_mass[n]",    #64
+                "tree.nearTracks_3D_ip[n]",    #65
+                "tree.nearTracks_3D_sip[n]",    #66
+                "tree.nearTracks_2D_ip[n]",    #67
+                "tree.nearTracks_2D_sip[n]",    #68
+                "tree.nearTracks_dotprodTrackSeed2D[n]",    #69
+                "tree.nearTracks_dotprodTrackSeed3D[n]",     #70
+                "tree.nearTracks_dotprodTrackSeedVectors2D[n]",    #71
+                "tree.nearTracks_dotprodTrackSeedVectors3D[n]",    #72
+                
                 ]
                 
                 
@@ -189,7 +212,7 @@ for ev in range(int(sys.argv[1]), int(sys.argv[1])+200):
 #            seeds.append(vertexCandidate_array)
 
 #seeds=numpy.array(seeds)
-numpy.save("track_by_track"+sys.argv[1]+".npy", vertexCandidate_array)
+numpy.save("tracks_newvars"+sys.argv[1]+".npy", vertexCandidate_array)
 
 print vertexCandidate_array.shape
 
