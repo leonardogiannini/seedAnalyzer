@@ -96,10 +96,11 @@
 // constructor "usesResource("TFileService");"
 // This will improve performance in multithreaded jobs.
 
-class JetSeedAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
+
+class AnalyzerSignedIP_trackSelectionVars : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
    public:
-      explicit JetSeedAnalyzer(const edm::ParameterSet&);
-      ~JetSeedAnalyzer();
+      explicit AnalyzerSignedIP_trackSelectionVars(const edm::ParameterSet&);
+      ~AnalyzerSignedIP_trackSelectionVars();
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -166,6 +167,9 @@ class JetSeedAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
 //      std::vector<int> genP_id_MM;
       
       std::vector<double> jet_pt;
+      std::vector<double> jet_px;
+      std::vector<double> jet_py;
+      std::vector<double> jet_pz;
       std::vector<double> jet_eta;
       std::vector<double> jet_phi;
       std::vector<double> jet_mass;
@@ -183,10 +187,20 @@ class JetSeedAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
       std::vector<double> seed_3D_sip;
       std::vector<double> seed_2D_ip;
       std::vector<double> seed_2D_sip;
+      std::vector<double> seed_3D_signedIp;
+      std::vector<double> seed_3D_signedSip;
+      std::vector<double> seed_2D_signedIp;
+      std::vector<double> seed_2D_signedSip;
       std::vector<int> seed_JetMatch;
-      std::vector<int> seed_Jet30Match;
-      std::vector<int> seed_ClosestJet;
-      std::vector<float> seed_ClosestJet_distance;
+      
+      std::vector<double> seed_chi2reduced;
+      std::vector<double> seed_nPixelHits;
+      std::vector<double> seed_nHits;
+      std::vector<double> seed_jetAxisDistance;
+      std::vector<double> seed_jetAxisDlength;
+      std::vector<float> seed_ClosestJet_dR;
+      
+      
       
       //vars from matching genParticles if any
       std::vector<double> seed_MC_pt;
@@ -217,6 +231,10 @@ class JetSeedAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
       std::vector<double> nearTracks_3D_sip;
       std::vector<double> nearTracks_2D_ip;
       std::vector<double> nearTracks_2D_sip;
+//       std::vector<double> nearTracks_3D_signedIp;
+//       std::vector<double> nearTracks_3D_signedSip;
+//       std::vector<double> nearTracks_2D_signedIp;
+//       std::vector<double> nearTracks_2D_signedSip;
       
       std::vector<double> nearTracks_PCAdist;
       std::vector<double> nearTracks_PCAdsig;
@@ -313,7 +331,25 @@ class JetSeedAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
 //
 // constructors and destructor
 //
-JetSeedAnalyzer::JetSeedAnalyzer(const edm::ParameterSet& iConfig)
+
+
+
+/*
+•pT > 1 GeV 
+•chi2/ndof < 5 
+•|dz| < 17 cm 
+•|dxy| < 2 cm 
+•Nhits(pixel)≥ 1 
+•Nhits(total)≥ 1
+•Distance(jet axis, track) < 0.07 cm a.k.a. “distance”•
+Distance(PV, closest point of the track to the jet axis) < 5 cm a.k.a. “length” 
+•Then tracks are sorted w.r.t. IP2D significance and are used in the CSV 
+computation
+*/
+
+
+
+AnalyzerSignedIP_trackSelectionVars::AnalyzerSignedIP_trackSelectionVars(const edm::ParameterSet& iConfig)
 
 {
    //now do what ever initialization is needed
@@ -361,10 +397,19 @@ JetSeedAnalyzer::JetSeedAnalyzer(const edm::ParameterSet& iConfig)
     tree->Branch("seed_3D_sip", &seed_3D_sip);
     tree->Branch("seed_2D_ip", &seed_2D_ip);
     tree->Branch("seed_2D_sip", &seed_2D_sip);
+    
+    tree->Branch("seed_3D_signedIp", &seed_3D_signedIp);
+    tree->Branch("seed_3D_signedSip", &seed_3D_signedSip);
+    tree->Branch("seed_2D_signedIp", &seed_2D_signedIp);
+    tree->Branch("seed_2D_signedSip", &seed_2D_signedSip);
+    
     tree->Branch("seed_JetMatch", &seed_JetMatch);
-    tree->Branch("seed_Jet30Match", &seed_Jet30Match);
-    tree->Branch("seed_ClosestJet", &seed_ClosestJet);
-    tree->Branch("seed_ClosestJet_distance", &seed_ClosestJet_distance);
+    tree->Branch("seed_chi2reduced",&seed_chi2reduced);
+    tree->Branch("seed_nPixelHits",&seed_nPixelHits);
+    tree->Branch("seed_nHits",&seed_nHits);
+    tree->Branch("seed_jetAxisDistance",&seed_jetAxisDistance);
+    tree->Branch("seed_jetAxisDlength",&seed_jetAxisDlength);
+    tree->Branch("seed_ClosestJet_distance", &seed_ClosestJet_dR);
     
     tree->Branch("seed_MC_pt",&seed_MC_pt);
     tree->Branch("seed_MC_eta",&seed_MC_eta);
@@ -379,7 +424,8 @@ JetSeedAnalyzer::JetSeedAnalyzer(const edm::ParameterSet& iConfig)
     tree->Branch("seed_MC_vx", &seed_MC_vx);
     tree->Branch("seed_MC_vy", &seed_MC_vy);
     tree->Branch("seed_MC_vz", &seed_MC_vz);
-    tree->Branch("seed_MC_pvd", &seed_MC_pvd);
+    tree->Branch("seed_MC_pvd", &seed_MC_pvd);  
+    
     
     tree->Branch("nearTracks_Nvtx", &nearTracks_Nvtx);
     tree->Branch("nearTracks_nTracks", &nearTracks_nTracks);
@@ -393,6 +439,10 @@ JetSeedAnalyzer::JetSeedAnalyzer(const edm::ParameterSet& iConfig)
     tree->Branch("nearTracks_3D_sip", &nearTracks_3D_sip);
     tree->Branch("nearTracks_2D_ip", &nearTracks_2D_ip);
     tree->Branch("nearTracks_2D_sip", &nearTracks_2D_sip);
+//     tree->Branch("nearTracks_3D_signedIp", &nearTracks_3D_signedIp);
+//     tree->Branch("nearTracks_3D_signedSip", &nearTracks_3D_signedSip);
+//     tree->Branch("nearTracks_2D_signedIp", &nearTracks_2D_signedIp);
+//     tree->Branch("nearTracks_2D_signedSip", &nearTracks_2D_signedSip);
 
     tree->Branch("nearTracks_PCAdist", &nearTracks_PCAdist);
     tree->Branch("nearTracks_PCAdsig", &nearTracks_PCAdsig);
@@ -456,7 +506,7 @@ JetSeedAnalyzer::JetSeedAnalyzer(const edm::ParameterSet& iConfig)
 }
 
 
-JetSeedAnalyzer::~JetSeedAnalyzer()
+AnalyzerSignedIP_trackSelectionVars::~AnalyzerSignedIP_trackSelectionVars()
 {
  
    // do anything here that needs to be done at desctruction time
@@ -471,7 +521,7 @@ JetSeedAnalyzer::~JetSeedAnalyzer()
 
 // ------------ method called for each event  ------------
 void
-JetSeedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+AnalyzerSignedIP_trackSelectionVars::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
 
     evt=iEvent.id().event();
@@ -479,6 +529,9 @@ JetSeedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     run=iEvent.id().run();
     
     jet_pt.clear();
+    jet_px.clear();
+    jet_py.clear();
+    jet_pz.clear();
     jet_eta.clear();
     jet_phi.clear();
     jet_mass.clear();
@@ -495,10 +548,17 @@ JetSeedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     seed_3D_sip.clear();
     seed_2D_ip.clear();
     seed_2D_sip.clear();
+    seed_3D_signedIp.clear();
+    seed_3D_signedSip.clear();
+    seed_2D_signedIp.clear();
+    seed_2D_signedSip.clear();
     seed_JetMatch.clear();
-    seed_Jet30Match.clear();
-    seed_ClosestJet.clear();
-    seed_ClosestJet_distance.clear();
+    seed_chi2reduced.clear();
+    seed_nPixelHits.clear();
+    seed_nHits.clear();
+    seed_jetAxisDistance.clear();
+    seed_jetAxisDlength.clear();    
+    seed_ClosestJet_dR.clear();
     
     seed_MC_MomFlavour.clear();
     seed_MC_MomPdgId.clear();
@@ -518,6 +578,10 @@ JetSeedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     nearTracks_3D_sip.clear();
     nearTracks_2D_ip.clear();
     nearTracks_2D_sip.clear();
+//     nearTracks_3D_signedIp.clear(); //sogned only in jet
+//     nearTracks_3D_signedSip.clear();
+//     nearTracks_2D_signedIp.clear();
+//     nearTracks_2D_signedSip.clear();
     nearTracks_PCAdist.clear();
     nearTracks_PCAdsig.clear();
     nearTracks_PCAonSeed_x.clear();
@@ -634,6 +698,9 @@ JetSeedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
             jet_eta.push_back(iter->first->eta());
             jet_phi.push_back(iter->first->phi());
             jet_mass.push_back(iter->first->mass());
+            jet_px.push_back(iter->first->px());
+            jet_py.push_back(iter->first->py());
+            jet_pz.push_back(iter->first->pz());
             
             std::cout<< "pt: " <<iter->first->pt()<< "eta: " << iter->first->eta()<< "phi: " << iter->first->phi()<< "m: " << iter->first->mass() << std::endl;
             
@@ -711,10 +778,12 @@ JetSeedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
         for(std::vector<TransientTrack>::const_iterator it = selectedTracks.begin(); it != selectedTracks.end(); it++){
         
-        
-        std::pair<bool,Measurement1D> ip = IPTools::absoluteImpactParameter3D(*it,pv);        
-        std::pair<bool,Measurement1D> ip2d = IPTools::absoluteTransverseImpactParameter(*it,pv);
-        
+        int seed_jet_match_i=seedToJetMatching(*it, jet_eta,jet_phi); 
+        GlobalVector direction(jet_px[seed_jet_match_i], jet_py[seed_jet_match_i], jet_pz[seed_jet_match_i]);
+        std::pair<bool,Measurement1D> ip = IPTools::absoluteImpactParameter3D(*it, pv);        
+        std::pair<bool,Measurement1D> ip2d = IPTools::absoluteTransverseImpactParameter(*it, pv);
+        std::pair<bool,Measurement1D> ipSigned = IPTools::signedImpactParameter3D(*it,direction, pv);        
+        std::pair<bool,Measurement1D> ip2dSigned = IPTools::signedTransverseImpactParameter(*it,direction, pv);
         
             if(ip.first && ip.second.value() >= min3DIPValue && ip.second.significance() >= min3DIPSignificance &&
             ip.second.value() <= max3DIPValue && ip.second.significance() <= max3DIPSignificance /*&&
@@ -751,11 +820,36 @@ JetSeedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
             seed_3D_sip.push_back(ip.second.significance());
             seed_2D_ip.push_back(ip2d.second.value());
             seed_2D_sip.push_back(ip2d.second.significance());
-            seed_Jet30Match.push_back(seedToJet30Matching(*it, jet_eta,jet_phi, jet_pt));
-            seed_JetMatch.push_back(seedToJetMatching(*it, jet_eta,jet_phi));
+            seed_3D_signedIp.push_back(ipSigned.second.value());
+            seed_3D_signedSip.push_back(ipSigned.second.significance());
+            seed_2D_signedIp.push_back(ip2dSigned.second.value());
+            seed_2D_signedSip.push_back(ip2dSigned.second.significance());
+            
+                       
+            seed_JetMatch.push_back(seed_jet_match_i);
+            
             pair = ClosestJet(*it, jet_eta,jet_phi);
-            seed_ClosestJet.push_back(pair.first);
-            seed_ClosestJet_distance.push_back(pair.second);
+            seed_ClosestJet_dR.push_back(pair.second);
+            
+            seed_chi2reduced.push_back(it->track().normalizedChi2());
+            seed_nPixelHits.push_back(it->track().hitPattern().numberOfValidPixelHits());
+            seed_nHits.push_back(it->track().hitPattern().numberOfValidHits());  
+            
+            if(seed_jet_match_i>=0){
+                
+            //GlobalVector direction(jet_px[seed_jet_match_i], jet_py[seed_jet_match_i], jet_pz[seed_jet_match_i]); 
+            std::pair<double, Measurement1D> jet_distance =IPTools::jetTrackDistance(*it, direction, pv);
+            seed_jetAxisDistance.push_back(std::fabs(jet_distance.second.value())); 
+            std::cout<<jet_distance.second.value()<<"      distance"<<jet_distance.second.significance()<<std::endl;
+            
+            TrajectoryStateOnSurface closest = IPTools::closestApproachToJet(it->impactPointState(),pv, direction,it->field());
+            if (closest.isValid()) seed_jetAxisDlength.push_back((closest.globalPosition() - pvp).mag()); 
+            else seed_jetAxisDlength.push_back(-99); 
+            
+            }
+            
+           else{seed_jetAxisDistance.push_back(-100.); seed_jetAxisDlength.push_back(-100.);  }
+          
 //             jet_seedIndex.push_back();
             
             if (genP_index[it - selectedTracks.begin()]>0){
@@ -873,7 +967,7 @@ JetSeedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                     
                     std::pair<bool,Measurement1D> t_ip = IPTools::absoluteImpactParameter3D(*tt,pv);        
                     std::pair<bool,Measurement1D> t_ip2d = IPTools::absoluteTransverseImpactParameter(*tt,pv);
-                    
+                   
                     
                     myTrack.set_values(tt->track().pt(), tt->track().eta(), tt->track().phi(),  tt->track().dz(), tt->track().dxy(), distance, 
                     m.significance(), /*put significance etc*/ 
@@ -888,7 +982,7 @@ JetSeedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                     myTrack.set_vars(masses[tt-selectedTracks.begin()],t_ip2d.second.value() , t_ip2d.second.significance(),
                     t_ip.second.value() , t_ip.second.significance(), dotprodTrackSeed2D, dotprodTrackSeed3D, dotprodTrackSeed2DV, dotprodTrackSeed3DV );
                     nearTracks.push_back(myTrack);
-                     
+                   
 //                    float w = distanceFromPV*distanceFromPV/(pvDistance*distance);
 //                    bool selected = (m.significance() < clusterMaxSignificance && 
 //                    dotprodSeed > clusterMinAngleCosine && //Angles between PV-PCAonSeed vectors and seed directions
@@ -976,7 +1070,8 @@ JetSeedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
             nearTracks_dotprodTrackSeedVectors3D.push_back(nearTracks[i].dotprodTrackSeedVectors3D);
             nearTracks_PCAonSeed_pvd.push_back(nearTracks[i].seedPCA_pv);
             nearTracks_PCAonTrack_pvd.push_back(nearTracks[i].trackPCA_pv);
-            
+
+                
             if (nearTracks[i].index>0){
                 std::cout<<"track "<<i<< std::endl;
             int g_i=nearTracks[i].index;
@@ -1103,12 +1198,12 @@ JetSeedAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
 
 
-int JetSeedAnalyzer::funzionePippo (int vivaLaVita) {
+int AnalyzerSignedIP_trackSelectionVars::funzionePippo (int vivaLaVita) {
 return 1;
 }
 
 
-std::vector<float> JetSeedAnalyzer::firstHadronInChain(reco::GenParticle gParticle, edm::RefVector<std::vector<reco::GenParticle> > mothers){
+std::vector<float> AnalyzerSignedIP_trackSelectionVars::firstHadronInChain(reco::GenParticle gParticle, edm::RefVector<std::vector<reco::GenParticle> > mothers){
     std::vector<float> vtx;
     vtx.push_back(0);
     vtx.push_back(0);
@@ -1188,7 +1283,7 @@ std::vector<float> JetSeedAnalyzer::firstHadronInChain(reco::GenParticle gPartic
 return vtx;   
 }
 
-int JetSeedAnalyzer::seedToJetMatching(reco::TransientTrack seed, std::vector<double> jet_eta, std::vector<double> jet_phi) {
+int AnalyzerSignedIP_trackSelectionVars::seedToJetMatching(reco::TransientTrack seed, std::vector<double> jet_eta, std::vector<double> jet_phi) {
   float angular_distance =  0.4;
   float dist_temp;
   int index = -1;
@@ -1206,7 +1301,7 @@ std::cout<<angular_distance<<"  index  "<<index<<std::endl;
 return index;
 }
 
-int JetSeedAnalyzer::seedToJet30Matching(reco::TransientTrack seed, std::vector<double> jet_eta, std::vector<double> jet_phi, std::vector<double> jet_pt) {
+int AnalyzerSignedIP_trackSelectionVars::seedToJet30Matching(reco::TransientTrack seed, std::vector<double> jet_eta, std::vector<double> jet_phi, std::vector<double> jet_pt) {
   float angular_distance =  0.4;
   float dist_temp;
   int index = -1;
@@ -1225,7 +1320,7 @@ std::cout<<angular_distance<<"  index 30 "<<index<<std::endl;
 return index;
 }
 
-std::pair<int,float> JetSeedAnalyzer::ClosestJet(reco::TransientTrack seed, std::vector<double> jet_eta, std::vector<double> jet_phi) {
+std::pair<int,float> AnalyzerSignedIP_trackSelectionVars::ClosestJet(reco::TransientTrack seed, std::vector<double> jet_eta, std::vector<double> jet_phi) {
   float angular_distance =  15;
   float dist_temp;
   int index = -1;
@@ -1248,7 +1343,7 @@ return values;
 
 
 
-int  JetSeedAnalyzer::seedSisters(std::vector<reco::GenParticle> genP, int genP_index, std::vector<trackVars2> nearTracks)
+int  AnalyzerSignedIP_trackSelectionVars::seedSisters(std::vector<reco::GenParticle> genP, int genP_index, std::vector<trackVars2> nearTracks)
 {
 
 std::cout << "enter the functions" << "  " << genP_index <<std::endl;
@@ -1288,7 +1383,7 @@ return 1;
 }
 
 
-double JetSeedAnalyzer::trackEff(std::vector<reco::GenParticle> genP, std::vector<reco::TransientTrack> tracks, double &BChain_eff, double &DChain_eff, double &B_eff,
+double AnalyzerSignedIP_trackSelectionVars::trackEff(std::vector<reco::GenParticle> genP, std::vector<reco::TransientTrack> tracks, double &BChain_eff, double &DChain_eff, double &B_eff,
       double &low_pt_eff, double &high_pt_eff, std::vector<double> &minGenChiSquare){
 
 minGenChiSquare.clear();
@@ -1432,7 +1527,7 @@ return eff;
 
 
 
-bool JetSeedAnalyzer::genLevelMM(std::vector<reco::GenParticle> genP, std::vector<reco::TransientTrack> tracks, std::vector<int>& genPnumbers, std::vector<double>& assigned_chisquares){ 
+bool AnalyzerSignedIP_trackSelectionVars::genLevelMM(std::vector<reco::GenParticle> genP, std::vector<reco::TransientTrack> tracks, std::vector<int>& genPnumbers, std::vector<double>& assigned_chisquares){ 
     std::multimap<float,std::pair<int,int>> chisquares_map;
     genPnumbers.clear();
     assigned_chisquares.clear();
@@ -1492,7 +1587,7 @@ return 1;
 }
 
 
-int JetSeedAnalyzer::genMap(std::vector<reco::GenParticle> genP, std::vector<reco::TransientTrack> tracks, std::vector<int>& genPnumbers, std::vector<double>& allChi){
+int AnalyzerSignedIP_trackSelectionVars::genMap(std::vector<reco::GenParticle> genP, std::vector<reco::TransientTrack> tracks, std::vector<int>& genPnumbers, std::vector<double>& allChi){
 
 std::vector<trackGenMatch2> chi_squares;  
 trackGenMatch2 chi_square; 
@@ -1580,7 +1675,7 @@ return 1;
 
 
 
-int JetSeedAnalyzer::genLevel(std::vector<reco::GenParticle> genP, reco::TransientTrack seed, std::vector<int>& MomFlav, std::vector<int>& BChain, std::vector<double>& allChi){
+int AnalyzerSignedIP_trackSelectionVars::genLevel(std::vector<reco::GenParticle> genP, reco::TransientTrack seed, std::vector<int>& MomFlav, std::vector<int>& BChain, std::vector<double>& allChi){
 
 std::vector<trackGenMatch2> chi_squares;  
 trackGenMatch2 chi_square; 
@@ -1716,19 +1811,19 @@ return -1;
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-JetSeedAnalyzer::beginJob()
+AnalyzerSignedIP_trackSelectionVars::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-JetSeedAnalyzer::endJob() 
+AnalyzerSignedIP_trackSelectionVars::endJob() 
 {
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-JetSeedAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+AnalyzerSignedIP_trackSelectionVars::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
@@ -1737,4 +1832,4 @@ JetSeedAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(JetSeedAnalyzer);
+DEFINE_FWK_MODULE(AnalyzerSignedIP_trackSelectionVars);

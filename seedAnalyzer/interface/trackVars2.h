@@ -1,7 +1,13 @@
+#ifndef trackVars2_h
+#define trackVars2_h
+
+
+
 class trackVars2 {
       public:
     double pt, eta, phi, dz, dxy,  dist, dsig;
     double mass, t3Dip, t3Dsip, t2Dip, t2Dsip;
+    double t3DipSigned, t3DsipSigned, t2DipSigned, t2DsipSigned;
     double PCA_sx, PCA_sy, PCA_sz, PCA_sxerr, PCA_syerr, PCA_szerr;
     double PCA_tx, PCA_ty, PCA_tz, PCA_txerr, PCA_tyerr, PCA_tzerr;
     double dotprodTrack, dotprodSeed;
@@ -17,6 +23,8 @@ class trackVars2 {
     double, double
     );
     
+    void set_signedIPs(double, double, double, double);
+    
     void set_vars (double, double, double, double,
     double, double, double, double, double
     );
@@ -26,7 +34,7 @@ class trackVars2 {
 
 };
 
-void trackVars2::set_values (double pt2, double eta2, double phi2, double dz2, double dxy2, double distaaa, double dsig2,
+inline void trackVars2::set_values (double pt2, double eta2, double phi2, double dz2, double dxy2, double distaaa, double dsig2,
 double PCA_sx2, double PCA_sy2, double PCA_sz2, double PCA_sxerr2, double PCA_syerr2, double PCA_szerr2, 
 double PCA_tx2, double PCA_ty2, double PCA_tz2, double PCA_txerr2, double PCA_tyerr2, double PCA_tzerr2,
 double dotprodTrack2, double dotprodSeed2) {
@@ -59,7 +67,7 @@ double dotprodTrack2, double dotprodSeed2) {
 //        std::cout << "filling " << dotprodTrack << "  " << dotprodSeed << std::endl;
 }
 
-void trackVars2::set_vars ( double m, double t2dip, double t2dsip, double t3dip, double t3dsip, double t2dTS, double t3dTS, double t2dTSV, double t3dTSV){
+inline void trackVars2::set_vars ( double m, double t2dip, double t2dsip, double t3dip, double t3dsip, double t2dTS, double t3dTS, double t2dTSV, double t3dTSV){
 mass=m;
 t3Dip=t3dip;
 t3Dsip=t3dsip;
@@ -73,12 +81,19 @@ dotprodTrackSeedVectors3D=t3dTSV;
 
 }
 
+inline void trackVars2::set_signedIPs ( double a, double b, double c, double d){
+t3DipSigned=c;
+t3DsipSigned=d;
+t2DipSigned=a;
+t2DsipSigned=b;
+}
 
-void trackVars2::set_index ( int a){
+
+inline void trackVars2::set_index ( int a){
 index=a;
 }
 
-void trackVars2::set_distances ( double a, double b){
+inline void trackVars2::set_distances ( double a, double b){
 seedPCA_pv=a;
 trackPCA_pv=b;
 }
@@ -110,29 +125,31 @@ class trackGenMatch2 {
 };
 
 
-void trackGenMatch2::set_chi ( double a){
+inline void trackGenMatch2::set_chi ( double a){
 chi_square=a;
 }
 
-void trackGenMatch2::set_numberOfDaughters ( int a){
+inline void trackGenMatch2::set_numberOfDaughters ( int a){
 numberOfDaughters=a;
 }
 
-void trackGenMatch2::set_MomFlav ( int a){
+inline void trackGenMatch2::set_MomFlav ( int a){
 MomFlav=a;
 }
 
-void trackGenMatch2::set_BChain ( int a){
+inline void trackGenMatch2::set_BChain ( int a){
 BChain=a;
 }
 
-void trackGenMatch2::set_GenIndex ( int a){
+inline void trackGenMatch2::set_GenIndex ( int a){
 GenIndex=a;
 }
 
-void trackGenMatch2::set_Status ( int a){
+inline void trackGenMatch2::set_Status ( int a){
 Status=a;
 }
+
+
 
 
 struct sortgen2
@@ -142,3 +159,5 @@ struct sortgen2
         return (struct1.chi_square < struct2.chi_square);
     }
 };
+
+#endif

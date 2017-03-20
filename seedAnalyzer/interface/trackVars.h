@@ -1,3 +1,6 @@
+#ifndef trackVars_h
+#define trackVars_h
+
 class trackVars {
       public:
     double pt, eta, phi, dz, dxy,  dist, dsig;
@@ -143,3 +146,5 @@ struct sortgen
         return (struct1.chi_square < struct2.chi_square);
     }
 };
+
+#endif
