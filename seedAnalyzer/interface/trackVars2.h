@@ -7,7 +7,7 @@ class trackVars2 {
       public:
     double pt, eta, phi, dz, dxy,  dist, dsig;
     double mass, t3Dip, t3Dsip, t2Dip, t2Dsip;
-    double t3DipSigned, t3DsipSigned, t2DipSigned, t2DsipSigned;
+//     double t3DipSigned, t3DsipSigned, t2DipSigned, t2DsipSigned;
     double PCA_sx, PCA_sy, PCA_sz, PCA_sxerr, PCA_syerr, PCA_szerr;
     double PCA_tx, PCA_ty, PCA_tz, PCA_txerr, PCA_tyerr, PCA_tzerr;
     double dotprodTrack, dotprodSeed;
@@ -78,15 +78,17 @@ dotprodTrackSeed3D=t3dTS;
 dotprodTrackSeedVectors2D=t2dTSV;
 dotprodTrackSeedVectors3D=t3dTSV;
 
+//  std::cout << "filling  myTrack "<< std::endl;
+
 
 }
 
-inline void trackVars2::set_signedIPs ( double a, double b, double c, double d){
-t3DipSigned=c;
-t3DsipSigned=d;
-t2DipSigned=a;
-t2DsipSigned=b;
-}
+// inline void trackVars2::set_signedIPs ( double a, double b, double c, double d){
+// t3DipSigned=c;
+// t3DsipSigned=d;
+// t2DipSigned=a;
+// t2DsipSigned=b;
+// }
 
 
 inline void trackVars2::set_index ( int a){

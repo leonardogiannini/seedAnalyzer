@@ -1008,17 +1008,17 @@ AnalyzerSignedIP_trackSelectionVars::analyze(const edm::Event& iEvent, const edm
                 }
             }
 //            
-//            for(unsigned int i=0; i< nearTracks.size(); i++) {
-//            std::cout << nearTracks[i].dist << "  "; 
-//            }
-//            std::cout <<  "  " << std::endl; 
+           for(unsigned int i=0; i< nearTracks.size(); i++) {
+           std::cout << nearTracks[i].dist << "  "; 
+           }
+           std::cout <<  "  " << std::endl; 
+           
+           for(unsigned int i=0; i< nearTracks.size(); i++) {
+           std::cout << nearTracks[i].dsig << "  "; 
+           }
+           std::cout <<  "  " << std::endl; 
 //            
-//            for(unsigned int i=0; i< nearTracks.size(); i++) {
-//            std::cout << nearTracks[i].dsig << "  "; 
-//            }
-//            std::cout <<  "  " << std::endl; 
-//            
-            std::sort (nearTracks.begin(), nearTracks.end(), sortfunction2());
+           std::sort (nearTracks.begin(), nearTracks.end(), sortfunction2());
 //            
 //            for(unsigned int i=0; i< nearTracks.size(); i++) {
 //            std::cout << nearTracks[i].dist << "  "; 
